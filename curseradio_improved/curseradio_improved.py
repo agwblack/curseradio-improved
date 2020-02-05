@@ -306,21 +306,27 @@ class OPMLBrowser:
             return json.loads(f.read())
 
     def get_keymap(self):
+        def convert_key(value):
+            if value.startswith("KEY_"):
+                return getattr(curses, value)
+            else:
+                return ord(value)
+
         """
         Get key mappings from configs.
         """
         keymap = {}
 
         for key in (
-                "up", "up_vi", "down", "down_vi", "start", "start_vi", "end",
-                "end_vi", "pageup", "pageup_vi", "pagedown", "pagedown_vi",
+                "up", "down", "start", "end",
+                "pageup", "pagedown",
                 "enter", "stop", "exit", "favourite"
         ):
             value = self.config["keymap"][key]
-            if value.startswith("KEY_"):
-                keymap[key] = getattr(curses, value)
+            if type(value) == list:
+                keymap[key] = [convert_key(v) for v in value]
             else:
-                keymap[key] = ord(value)
+                keymap[key] = [convert_key(value)]
         return keymap
 
     def init_colors(self):
@@ -455,21 +461,19 @@ class OPMLBrowser:
             ch = self.screen.getch()
             if ch == curses.KEY_RESIZE:
                 self.maxy, self.maxx = self.screen.getmaxyx()
-            elif ch == self.keymap["up"] or ch == self.keymap["up_vi"]:
+            elif ch in self.keymap["up"]:
                 self.move(rel=-1)
-            elif ch == self.keymap["down"] or ch == self.keymap["down_vi"]:
+            elif ch in self.keymap["down"]:
                 self.move(rel=1)
-            elif ch == self.keymap["start"] or ch == self.keymap["start_vi"]:
+            elif ch in self.keymap["start"]:
                 self.move(to="start")
-            elif ch == self.keymap["end"] or ch == self.keymap["end_vi"]:
+            elif ch in self.keymap["end"]:
                 self.move(to="end")
-            elif ch == self.keymap["pageup"] or ch == self.keymap["pageup_vi"]:
+            elif ch in self.keymap["pageup"]:
                 self.move(rel=-self.maxy)
-            elif ch == self.keymap["pagedown"] or ch == self.keymap[
-                "pagedown_vi"
-            ]:
+            elif ch in self.keymap["pagedown"]:
                 self.move(rel=self.maxy)
-            elif ch == self.keymap["enter"] or ch == ord('\n'):
+            elif ch in self.keymap["enter"]:
                 for msg in self.selected.activate():
                     if isinstance(msg, str):
                         self.display(msg=msg)
@@ -488,17 +492,17 @@ class OPMLBrowser:
 
                 self.flat = self.root.flatten([])
                 self.move(rel=0)
-            elif ch == self.keymap["exit"]:
+            elif ch in self.keymap["exit"]:
                 if self.child is not None:
                     self.child.terminate()
                     self.child.wait()
                 self.save_favourites()
                 return
-            elif ch == self.keymap["stop"]:
+            elif ch in self.keymap["stop"]:
                 if self.child is not None:
                     self.child.terminate()
                     self.child.wait()
-            elif ch == self.keymap["favourite"]:
+            elif ch in self.keymap["favourite"]:
                 self.favourites.toggle(self.selected)
                 self.flat = self.root.flatten([])
                 self.move(rel=0)
