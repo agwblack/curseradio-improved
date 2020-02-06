@@ -8,7 +8,7 @@
     "end": ["KEY_END", "G"],
     "pageup": ["KEY_PPAGE", "p"],
     "pagedown": ["KEY_NPAGE", "n"],
-    "enter": ["KEY_ENTER", "l", "KEY_RIGHT"],
+    "enter": ["KEY_ENTER", "l", "KEY_RIGHT", "\n"],
     "stop": "s",
     "exit": "q",
     "favourite": "f"
